@@ -42,3 +42,17 @@ foreach ($slot in $timeSlots) { # stores each field in PS variable
         }
     }
 }
+
+
+$blockPXETime = $endTime.AddMinutes(-30)  # 30 min before break ends
+
+        # Ensure the block time is in the future
+        if ($blockPXETime -gt $now) {
+            Write-Host "Scheduling BlockPXE.ps1 for $blockPXETime"
+
+            # Create scheduled task for BlockPXE
+            $blockPXEAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$blockPXEScriptPath`""
+            $blockPXETrigger = New-ScheduledTaskTrigger -Once -At $blockPXETime
+            $blockPXETaskName = "$taskNamePrefix-BlockPXE-$weekPosition-$day-$startTime"
+
+            Register-ScheduledTask -TaskName $blockPXETaskName -Action $blockPXEAction -Trigger $blockPXETrigger -TaskPath "\CM142 Lab Breaks"
