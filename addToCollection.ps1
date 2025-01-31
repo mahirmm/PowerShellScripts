@@ -28,6 +28,6 @@ Invoke-Command -ScriptBlock {
 
     $includeCollectionName = "Disk Space Below 40G" # collection 'included' in below collection
     $collectionName = "Automatic OS Deployment" # collection to run command against
-    Get-CMCollection -Name $collectionName | Remove-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName $includeCollectionName -Force # removes include query from collection membership rules
+    Get-CMCollection -Name $collectionName | Add-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName $includeCollectionName
     Get-CMCollection -Name $collectionName | Invoke-CMCollectionUpdate # update collection membership rules
 }

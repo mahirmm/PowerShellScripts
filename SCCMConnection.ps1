@@ -1,7 +1,4 @@
-﻿#
-# Press 'F5' to run this script. Running this script will load the ConfigurationManager
-# module for Windows PowerShell and will connect to the site.
-#
+﻿# below script was created by SCCM console to connect PowerShell to SCCM site
 # This script was auto-generated at '31/01/2025 19:38:06'.
 
 # Site configuration
