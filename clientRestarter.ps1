@@ -26,17 +26,17 @@ if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue
 Set-Location "$($SiteCode):\" @initParams
 
 $collectionName = "Automatic OS Deployment" # collection to run command against
+#$collectionName = "CM142 Lab" # collection to run command against
 $collectionDevices = Get-CMDevice -CollectionName $collectionName # obtains device info on all devices in the colelction
 $deviceList = @() # creates empty array
-$numberOfDevicesinCollection = $collectionDevices.Count # counts number of devices in colelction
-$numberOfDevicesinList = 1 # counts number of devices in array/list - starts at 1 to account for last value of array
 foreach ($device in $collectionDevices) { # for every device in the collection
-    if ($numberOfDevicesinList -lt $numberOfDevicesinCollection){
-        $deviceList += $device.Name #+ ',' # append device name and comma seperator to array 'name1, name2, name3'
-        $numberOfDevicesinList += 1
-    } else {
-        $deviceList += $device.Name # only appends name and no comma as this is the last value of the array
-    }
+    $deviceList += $device.Name # append device name to array 'name1, name2, name3'
 }
 
-Restart-Computer -ComputerName $deviceList -Force # force restarts every device in the array
+# searches for all devices in array that does NOT have a logged in user and stores results in variable
+$noLoggedinUsers = Get-WmiObject -Class Win32_ComputerSystem -ComputerName $deviceList |
+    Where-Object {-Not $_.Username} |
+    Select-Object -ExpandProperty Name
+
+Write-Host $noLoggedinUsers
+#Restart-Computer -ComputerName $deviceList -Force # force restarts every device in the array that does not have an active user
