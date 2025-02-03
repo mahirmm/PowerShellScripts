@@ -1,6 +1,6 @@
 # Paths to the CSV  timetable file and PowerShell script
 $CM142Timetable = "C:\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowershellScripts\Computer Lab Timetable.csv" # cm142 timetable csv
-$addToSCCMCollection = "C:\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowershellScripts\popup.ps1" # script adds devices to SCCM collection
+$addToSCCMCollection = "C:\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowershellScripts\addToCollection.ps1" # script adds devices to SCCM collection
 $removeFromSCCMCollection = "C:\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowershellScripts\removeFromCollection.ps1" # script removes devices from SCCM collection
 
 $currentDay = (Get-Date).DayOfWeek.ToString() # current day of week

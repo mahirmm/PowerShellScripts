@@ -28,6 +28,27 @@ Invoke-Command -ScriptBlock {
 
     $includeCollectionName = "Disk Space Below 40G" # collection 'included' in below collection
     $collectionName = "Automatic OS Deployment" # collection to run command against
-    Get-CMCollection -Name $collectionName | Add-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName $includeCollectionName
+    $collectionID = "3800001A" # above collection but ID
+    Get-CMCollection -Name $collectionName | Add-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName $includeCollectionName # add collection to collection
+    Start-Sleep -Seconds 5 # delay for 5s to allow collection membership to update
     Get-CMCollection -Name $collectionName | Invoke-CMCollectionUpdate # update collection membership rules
+
+    $timeout = 300 # 5 minute timeout
+    $timeElapsed = 0 # seconds counter
+
+    do { # check if membership rules updated successfully
+        Start-Sleep -Seconds 10
+        $timeElapsed += 10 # increase counter by 10seconds
+        $collectionDevices = Get-CMDevice -CollectionName $collectionName
+
+        if ($collectionDevices.Count -gt 0) { # if there is more than 1 device in the collection ...
+            break # exit loop as collection has begun to update membership rules
+        }
+    } while ($timeElapsed -lt $timeout) # loop until 5 minutes elapsed
+
+    $collectionDevices = Get-CMDevice -CollectionName $collectionName # obtain all devices in the collection
+    foreach ($device in $collectionDevices) { # loop through each device and clear PXE deployment
+        Clear-CMPxeDeployment -ResourceId $device.ResourceID # clears device's PXE flag using the device's resourceID
+        Write-Host "PXE Cleared"
+    }
 }
