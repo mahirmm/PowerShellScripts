@@ -2,7 +2,9 @@ WeekPosition,Day,Time,Session
 01,Monday,00:00-13:00,Break
 01,Monday,13:00-15:00,Class
 01,Monday,15:00-17:00,Class
-01,Monday,17:00-23:59,Break
+01,Monday,17:00-19:50,Class
+01,Monday,19:55-20:55,Break
+01,Monday,20:55-23:59,Class
 02,Tuesday,00:00-10:00,Break
 02,Tuesday,10:00-11:00,Class
 02,Tuesday,11:00-13:00,Class

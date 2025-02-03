@@ -51,4 +51,7 @@ Invoke-Command -ScriptBlock {
         Clear-CMPxeDeployment -ResourceId $device.ResourceID # clears device's PXE flag using the device's resourceID
         Write-Host "PXE Cleared"
     }
+    $clientRestarter = "C:\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowershellScripts\clientRestarter.ps1"
+    & $clientRestarter
+
 }
