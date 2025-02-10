@@ -17,7 +17,21 @@ Invoke-Command -Session $Session -ScriptBlock {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss" # current date/time
     $logFile = "$logPath\$computerName-Imaging.log" # file name to create/append
 
+    # retrieve task sequence variable
+    $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+    $imagingStart = $TSEnv.Value("imagingStart") # time TS started
+    $imagingStart = [datetime]$imagingStart # convert to date time
+    $imagingEnd = [datetime]$timestamp # time TS ended in date time
+
+    $imagingTimeDifference = $imagingEnd - $imagingStart # time difference in HH:mm:ss
+    $imagingHours = ([math]::Round($($imagingTimeDifference.TotalHours))) # hours imaging rounded to 1 decimal place
+    $imagingMinutes = $imagingTimeDifference.Minutes # minutes imaging
+    $imagingSeconds = $imagingTimeDifference.Seconds # seconds imaging
+    $imagingDuration = $imagingHours + "hours" + $imagingMinutes + "minutes and" + $imagingSeconds + "seconds"
+
     "Imaging End: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+    "Imaging Duration: $imagingTimeDifference" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+    "Imaging Duration: $imagingDuration" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
 
 } -ArgumentList $sccmSiteCode, $SCCMServer, $computerName

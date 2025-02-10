@@ -1,4 +1,6 @@
+#$taskSequenceName = $env:_SMSTSPackageName # gets current running TS name
 Invoke-Command -ScriptBlock {
+    #param ($TSName) # task sequence name
     $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\Logs" # UNC path to log folder
     $adminUsername = "PROJECT\MAdmin"
     $adminPassword = ConvertTo-SecureString "Shaolin1" -AsPlainText -Force
@@ -8,7 +10,8 @@ Invoke-Command -ScriptBlock {
 
     $adminUserSCCM = "PROJECT\Administrator" # SCCM admin user
     $adminPassSCCM = ConvertTo-SecureString "Shaolin124?@#" -AsPlainText -Force # SCCM admin password
-    $adminCredSCCM = new-object -typename System.Management.Automation.PSCredential -argumentlist $adminUserSCCM,$adminPassSCCM # establishes admin credentials for connection to SCCM
+    #$adminCredSCCM = new-object -typename System.Management.Automation.PSCredential -argumentlist $adminUserSCCM,$adminPassSCCM # establishes admin credentials for connection to SCCM
+    $adminCredSCCM = New-Object System.Management.Automation.PSCredential ($adminUserSCCM, $adminPassSCCM)
 
     $sccmSiteCode = "380" # SCCM site code 
     $SCCMServer = "odin.project.co3808.com" # SCCM FQDN
@@ -18,6 +21,7 @@ Invoke-Command -ScriptBlock {
     # obtain MAC of client device NIC
     $MAC = (Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $_.MACAddress -and $_.IPEnabled }).MACAddress
     $cleanMAC = $MAC -replace ":", "-" # replaces colons with dashes to comply with Windows file names
+    # $cleanMAC = "00-0C-29-1B-4E-B0"
 
     $macPath = "$logPath\$cleanMAC.txt" # define the MAC file location
     # retrieve the computer name based on MAC
@@ -30,9 +34,9 @@ Invoke-Command -ScriptBlock {
     }
 
     # search for all user-created collections that the device is apart of
-    # $collectionSearcher = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace "root/SMS/site_$sccmSiteCode" `
-    #     -Query "SELECT SMS_Collection.* FROM SMS_FullCollectionMembership, SMS_Collection WHERE name = '$computerName' AND SMS_FullCollectionMembership.CollectionID = SMS_Collection.CollectionID AND CollectionID NOT LIKE 'SMS%'"
-    # write-host $collectionSearcher
+    $collectionSearcher = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace "root/SMS/site_$sccmSiteCode" `
+        -Query "SELECT SMS_Collection.* FROM SMS_FullCollectionMembership, SMS_Collection WHERE name = '$computerName' AND SMS_FullCollectionMembership.CollectionID = SMS_Collection.CollectionID AND CollectionID NOT LIKE 'SMS%'"
+    write-host $collectionSearcher
 
     if ($computerName -eq "Unknown-PC"){
         break
@@ -55,8 +59,17 @@ Invoke-Command -ScriptBlock {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss" # current date/time
     $logFile = "$logPath\$computerName-Imaging.log" # file name to create/append
 
+    # sets task sequence variable
+    $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+    $TSEnv.Value("imagingStart") = $timestamp
+    $tsenv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+    $taskSequenceName = $tsenv.Value("_SMSTSPackageName")
+
+
     # append data to log file
     "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # append data to file / create file if not exist
     "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+    "Task Sequence: $taskSequenceName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+}# -ArgumentList $taskSequenceName
