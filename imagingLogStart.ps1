@@ -61,9 +61,13 @@ Invoke-Command -ScriptBlock {
 
     # sets task sequence variable
     $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
-    $TSEnv.Value("imagingStart") = $timestamp
+    $TSEnv.Value("imagingStart") = $timestamp # stores imaging start time in TS variable
     $tsenv = New-Object -ComObject Microsoft.SMS.TSEnvironment
-    $taskSequenceName = $tsenv.Value("_SMSTSPackageName")
+    $taskSequenceName = $tsenv.Value("_SMSTSPackageName") # retrieves TS name from variable
+    $taskSequenceID = $tsenv.Value("_SMSTSPackageID") # retrieves TS ID from variable
+
+
+    
 
 
     # append data to log file
@@ -71,5 +75,5 @@ Invoke-Command -ScriptBlock {
     "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Task Sequence: $taskSequenceName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+    "Task Sequence: $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
 }# -ArgumentList $taskSequenceName
