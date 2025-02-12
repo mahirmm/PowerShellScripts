@@ -1,6 +1,11 @@
-#$taskSequenceName = $env:_SMSTSPackageName # gets current running TS name
+# script to determine:
+## hostname of current computer
+## SCCM collections of current computer
+## current TS deployment
+## TS deployment reason
+### all details saved to "[hostname]-Imaging.log"
+
 Invoke-Command -ScriptBlock {
-    #param ($TSName) # task sequence name
     $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\Logs" # UNC path to log folder
     $adminUsername = "PROJECT\MAdmin"
     $adminPassword = ConvertTo-SecureString "Shaolin1" -AsPlainText -Force
@@ -10,8 +15,7 @@ Invoke-Command -ScriptBlock {
 
     $adminUserSCCM = "PROJECT\Administrator" # SCCM admin user
     $adminPassSCCM = ConvertTo-SecureString "Shaolin124?@#" -AsPlainText -Force # SCCM admin password
-    #$adminCredSCCM = new-object -typename System.Management.Automation.PSCredential -argumentlist $adminUserSCCM,$adminPassSCCM # establishes admin credentials for connection to SCCM
-    $adminCredSCCM = New-Object System.Management.Automation.PSCredential ($adminUserSCCM, $adminPassSCCM)
+    $adminCredSCCM = New-Object System.Management.Automation.PSCredential ($adminUserSCCM, $adminPassSCCM) # establishes admin credentials for connection to SCCM
 
     $sccmSiteCode = "380" # SCCM site code 
     $SCCMServer = "odin.project.co3808.com" # SCCM FQDN
@@ -21,7 +25,6 @@ Invoke-Command -ScriptBlock {
     # obtain MAC of client device NIC
     $MAC = (Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $_.MACAddress -and $_.IPEnabled }).MACAddress
     $cleanMAC = $MAC -replace ":", "-" # replaces colons with dashes to comply with Windows file names
-    # $cleanMAC = "00-0C-29-1B-4E-B0"
 
     $macPath = "$logPath\$cleanMAC.txt" # define the MAC file location
     # retrieve the computer name based on MAC
@@ -66,39 +69,34 @@ Invoke-Command -ScriptBlock {
     $taskSequenceName = $tsenv.Value("_SMSTSPackageName") # retrieves TS name from variable
     $taskSequenceID = $tsenv.Value("_SMSTSPackageID") # retrieves TS ID from variable
 
-
-
-
     # search for all user-created collections that the device is apart of
     $collectionSearcher = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace "root/SMS/site_$sccmSiteCode" `
         -Query "SELECT SMS_Collection.* FROM SMS_FullCollectionMembership, SMS_Collection WHERE name = '$computerName' AND SMS_FullCollectionMembership.CollectionID = SMS_Collection.CollectionID AND CollectionID NOT LIKE 'SMS%'" |
-        Select-Object -ExpandProperty Name
+        Select-Object -ExpandProperty Name # selects name field only
     $collectionSearcher = ($collectionSearcher -join ', ') # seperate with comma and a space
     write-host $collectionSearcher
 
-    # checks which collections contains the "Deploy OS" task sequence
+    # checks which collections contains the "$taskSequenceName" task sequence
     $TSquery = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace root/SMS/site_$sccmSiteCode -Query `
         "SELECT CollectionID, CollectionName, PackageID, PackageName FROM SMS_AdvertisementInfo WHERE CollectionID NOT LIKE 'SMS%' and PackageName = '$taskSequenceName'" |
         Select-Object -ExpandProperty CollectionName
     write-host $TSquery
 
-
     $cautionCollections = "Disk Space Below 40G", "NoRustDesk" # list of collections that could initiate an automatic collection
     $collectionSearcherArray = $collectionSearcher -split ", " # convert collectionSearcher into indexable array
     $exists = $cautionCollections | Where-Object { $collectionSearcherArray -contains $_ } # compares two arrays to find macthes
     $exists = ($exists -join ', ') # join list of matching collections
-    if ($exists) {
+    if ($exists) { # if match found
         $deploymentReason = "Device reimaged with $taskSequenceName as it is in collection(s) $exists"
-    } else {
+    } else { # no match found
         $deploymentReason = "Unable to determine device reimage reason"
     }
 
-
-    # append data to log file
-    "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # append data to file / create file if not exist
-    "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Task Sequence (Name - ID): $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Deployment Reason: $deploymentReason" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+     # append data to log file / create file if not exist
+    "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # seperator
+    "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS started
+    "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # hostname
+    "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # list of user-created collections
+    "Task Sequence (Name - ID): $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # TS name and ID
+    "Deployment Reason: $deploymentReason" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # why the computer reimaged
 }

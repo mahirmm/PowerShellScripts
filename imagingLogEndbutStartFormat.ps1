@@ -1,3 +1,9 @@
+# script to determine:
+## hostname of current computer
+## SCCM collections of current computer
+## current TS deployment
+## TS deployment reason
+### all details saved to "[hostname]-Imaging.log"
 Invoke-Command -ScriptBlock {
     $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\Logs" # UNC path to log folder
     $adminUsername = "PROJECT\MAdmin"
@@ -6,14 +12,9 @@ Invoke-Command -ScriptBlock {
 
     New-PSDrive -Name Z -PSProvider FileSystem -Root $logPath -Credential $adminCredential -Persist # map network share to drive Z:\
 
-    # $adminUserSCCM = "PROJECT\Administrator" # SCCM admin user
-    # $adminPassSCCM = ConvertTo-SecureString "Shaolin124?@#" -AsPlainText -Force # SCCM admin password
-    # #$adminCredSCCM = new-object -typename System.Management.Automation.PSCredential -argumentlist $adminUserSCCM,$adminPassSCCM # establishes admin credentials for connection to SCCM
-    # $adminCredSCCM = New-Object System.Management.Automation.PSCredential ($adminUserSCCM, $adminPassSCCM)
-
     $sccmSiteCode = "380" # SCCM site code 
     $SCCMServer = "odin.project.co3808.com" # SCCM FQDN
-    $computerName = $env:COMPUTERNAME # computer name/hostname
+    $computerName = $env:COMPUTERNAME # get computer name/hostname by querying SCCM/OS
 
     $initParams = @{}
 
@@ -28,13 +29,8 @@ Invoke-Command -ScriptBlock {
     $imagingEnd = [datetime]$timestamp # time TS ended in date time
 
     $imagingTimeDifference = $imagingEnd - $imagingStart # time difference in HH:mm:ss
-    # $imagingHours = ([math]::Round($($imagingTimeDifference.TotalHours))) # hours imaging rounded to 1 decimal place
-    # $imagingMinutes = $imagingTimeDifference.Minutes # minutes imaging
-    # $imagingSeconds = $imagingTimeDifference.Seconds # seconds imaging
-    # $imagingDuration = $imagingHours + "hours" + $imagingMinutes + "minutes and" + $imagingSeconds + "seconds"
 
-    "Imaging End: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Imaging Duration: $imagingTimeDifference" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    # "Imaging Duration: $imagingDuration" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-} #-ArgumentList $taskSequenceName
+    "Imaging End: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS completed
+    "Imaging Duration: $imagingTimeDifference" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # duration of imaging
+    "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # seperator
+}
