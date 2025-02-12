@@ -19,8 +19,8 @@ Invoke-Command -Session $Session -ScriptBlock {
 
     # retrieve task sequence variable
     $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
-    $imagingStart = $TSEnv.Value("imagingStart") # time TS started
-    $imagingStart = [datetime]$imagingStart # convert to date time
+    $imagingStartTS = $TSEnv.Value("imagingStart") # time TS started
+    $imagingStart = [datetime]$imagingStartTS # convert to date time
     $imagingEnd = [datetime]$timestamp # time TS ended in date time
 
     $imagingTimeDifference = $imagingEnd - $imagingStart # time difference in HH:mm:ss
