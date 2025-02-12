@@ -4,6 +4,7 @@
 ## current TS deployment
 ## TS deployment reason
 ### all details saved to "[hostname]-Imaging.log"
+
 Invoke-Command -ScriptBlock {
     $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\Logs" # UNC path to log folder
     $adminUsername = "PROJECT\MAdmin"
