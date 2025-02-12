@@ -67,7 +67,31 @@ Invoke-Command -ScriptBlock {
     $taskSequenceID = $tsenv.Value("_SMSTSPackageID") # retrieves TS ID from variable
 
 
-    
+
+
+    # search for all user-created collections that the device is apart of
+    $collectionSearcher = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace "root/SMS/site_$sccmSiteCode" `
+        -Query "SELECT SMS_Collection.* FROM SMS_FullCollectionMembership, SMS_Collection WHERE name = '$computerName' AND SMS_FullCollectionMembership.CollectionID = SMS_Collection.CollectionID AND CollectionID NOT LIKE 'SMS%'" |
+        Select-Object -ExpandProperty Name
+    $collectionSearcher = ($collectionSearcher -join ', ') # seperate with comma and a space
+    write-host $collectionSearcher
+
+    # checks which collections contains the "Deploy OS" task sequence
+    $TSquery = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace root/SMS/site_$sccmSiteCode -Query `
+        "SELECT CollectionID, CollectionName, PackageID, PackageName FROM SMS_AdvertisementInfo WHERE CollectionID NOT LIKE 'SMS%' and PackageName = '$taskSequenceName'" |
+        Select-Object -ExpandProperty CollectionName
+    write-host $TSquery
+
+
+    $cautionCollections = "Disk Space Below 40G", "NoRustDesk" # list of collections that could initiate an automatic collection
+    $collectionSearcherArray = $collectionSearcher -split ", " # convert collectionSearcher into indexable array
+    $exists = $cautionCollections | Where-Object { $collectionSearcherArray -contains $_ } # compares two arrays to find macthes
+    $exists = ($exists -join ', ') # join list of matching collections
+    if ($exists) {
+        $deploymentReason = "Device reimaged with $taskSequenceName as it is in collection(s) $exists"
+    } else {
+        $deploymentReason = "Unable to determine device reimage reason"
+    }
 
 
     # append data to log file
@@ -75,5 +99,6 @@ Invoke-Command -ScriptBlock {
     "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
     "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-    "Task Sequence: $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
-}# -ArgumentList $taskSequenceName
+    "Task Sequence (Name - ID): $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+    "Deployment Reason: $deploymentReason" | Out-File -FilePath ('FileSystem::' + $logFile) -Append
+}
