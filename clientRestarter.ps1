@@ -39,4 +39,4 @@ $noLoggedinUsers = Get-WmiObject -Class Win32_ComputerSystem -ComputerName $devi
     Select-Object -ExpandProperty Name
 
 Write-Host $noLoggedinUsers
-#Restart-Computer -ComputerName $deviceList -Force # force restarts every device in the array that does not have an active user
+Restart-Computer -ComputerName $noLoggedinUsers -Force # force restarts every device in the array that does not have an active user
