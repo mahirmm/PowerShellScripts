@@ -3,24 +3,26 @@ WeekPosition,Day,Time,Session,ClassNum,Lab
 01,Monday,09:00-10:00,Class,002,Software Engineering
 01,Monday,10:00-12:00,Break,003,Break
 01,Monday,12:00-13:00,Class,003,Networking
-01,Monday,13:00-17:00,Break,004,Break
+01,Monday,13:00-23:59,Break,004,Break
 02,Tuesday,00:00-10:00,Break,001,Break
 02,Tuesday,10:00-12:00,Class,002,Networking
 02,Tuesday,12:00-14:00,Break,003,Break
 02,Tuesday,14:00-15:00,Class,003,Software Engineering
 02,Tuesday,15:00-16:00,Break,004,Break
 02,Tuesday,16:00-17:00,Class,004,Networking
+02,Tuesday,17:00-23:59,Class,004,Break
 03,Wednesday,00:00-11:00,Break,001,Break
 03,Wednesday,11:00-13:00,Class,002,Software Engineering
 03,Wednesday,13:00-14:00,Break,003,Break
 03,Wednesday,14:00-15:00,Class,003,Networking
-03,Wednesday,15:00-16:00,Break,004,Break
+03,Wednesday,15:00-23:59,Break,004,Break
 04,Thursday,00:00-08:00,Break,001,Break
 04,Thursday,09:00-11:00,Class,002,Software Engineering
 04,Thursday,11:00-13:00,Break,003,Break
 04,Thursday,13:00-15:00,Class,003,Networking
 04,Thursday,15:00-16:00,Break,004,Break
 04,Thursday,16:00-17:00,Class,005,Software Engineering
+04,Thursday,17:00-23:59,Break,006,Break
 05,Friday,00:00-08:00,Break,001,Break
 05,Friday,09:00-10:00,Class,002,Networking
 05,Friday,10:00-12:00,Break,003,Break
@@ -29,5 +31,6 @@ WeekPosition,Day,Time,Session,ClassNum,Lab
 05,Friday,14:00-15:00,Class,004,Networking
 05,Friday,15:00-16:00,Break,005,Break
 05,Friday,16:00-17:00,Class,006,Software Engineering
+05,Friday,17:00-23:59,Break,007,Break
 06,Saturday,00:00-23:59,Break,001,Break
 07,Sunday,00:00-23:59,Break,001,Break
