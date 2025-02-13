@@ -97,6 +97,6 @@ Invoke-Command -ScriptBlock {
     "Imaging Start: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS started
     "Computer Name: $computerName" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # hostname
     "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # list of user-created collections
-    "Task Sequence (Name - ID): $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # TS name and ID
+    "Task Sequence: $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # TS name and ID
     "Deployment Reason: $deploymentReason" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # why the computer reimaged
 }
