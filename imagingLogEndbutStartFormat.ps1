@@ -31,6 +31,7 @@ Invoke-Command -ScriptBlock {
 
     $imagingTimeDifference = $imagingEnd - $imagingStart # time difference in HH:mm:ss
 
+    # "Lab Deployed: $labType" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS completed
     "Imaging End: $timestamp" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS completed
     "Imaging Duration: $imagingTimeDifference" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # duration of imaging
     "--------------------------------------------------" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # seperator

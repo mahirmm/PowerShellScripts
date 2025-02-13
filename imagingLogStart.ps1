@@ -68,6 +68,7 @@ Invoke-Command -ScriptBlock {
     $tsenv = New-Object -ComObject Microsoft.SMS.TSEnvironment
     $taskSequenceName = $tsenv.Value("_SMSTSPackageName") # retrieves TS name from variable
     $taskSequenceID = $tsenv.Value("_SMSTSPackageID") # retrieves TS ID from variable
+    $labType = $TSEnv.Value("nextLabType")
 
     # search for all user-created collections that the device is apart of
     $collectionSearcher = Get-WmiObject -credential $adminCredSCCM -ComputerName $SCCMServer -Namespace "root/SMS/site_$sccmSiteCode" `
@@ -99,4 +100,5 @@ Invoke-Command -ScriptBlock {
     "Included Collections: $collectionList" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # list of user-created collections
     "Task Sequence: $taskSequenceName - $taskSequenceID" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # TS name and ID
     "Deployment Reason: $deploymentReason" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # why the computer reimaged
+    "Lab Deployed: $labType" | Out-File -FilePath ('FileSystem::' + $logFile) -Append # time TS completed
 }

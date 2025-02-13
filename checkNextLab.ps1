@@ -1,16 +1,14 @@
 Invoke-Command -ScriptBlock {
-    $path = "\\ODIN\Users\Administrator\Desktop\SCCM"
+    $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\Logs" # UNC path to log folder
     $timetablePath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowerShellScripts\Computer Lab Timetable with Classes.csv" # UNC path to timetable.csv
     $adminUsername = "PROJECT\MAdmin"
     $adminPassword = ConvertTo-SecureString "Shaolin1" -AsPlainText -Force
     $adminCredential = New-Object System.Management.Automation.PSCredential ($adminUsername, $adminPassword) # establishes admin credentials for connection
 
-    # New-PSDrive -Name Z -PSProvider FileSystem -Root $logPath -Credential $adminCredential -Persist # map network share to drive Z:\
+    New-PSDrive -Name Z -PSProvider FileSystem -Root $logPath -Credential $adminCredential -Persist # map network share to drive Z:\
 
-    # get current time and today's day name
-    $currentTime = Get-Date -Format "HH:mm"
-    $today = Get-Date -UFormat "%A" # eg. 'Monday', 'Tuesday'
-
+    # get today's day name
+    $today = Get-Date -Format "dddd" # eg. 'Monday', 'Tuesday'
     $csvData = Import-Csv -Path $timetablePath # read CSV
 
     # function to process schedule for a given day
@@ -24,10 +22,10 @@ Invoke-Command -ScriptBlock {
             }
         } | Sort-Object StartTime # sort by lab's start time
 
-        return $sessions | Where-Object { $_.Lab -ne "Break" } | Select-Object -First 1 # returns the upcoming class exlcuding breaks
+        return $sessions | Where-Object { $_.Lab -ne "Break" -and $_.StartTime -gt (Get-Date -Format "HH:mm") } | Select-Object -First 1 # returns the next upcoming class exlcuding breaks
     }
 
-    $nextClass = Get-NextClass $today | Where-Object { $_.StartTime -gt (Get-Date) } # gets next scheduled class for today
+    $nextClass = Get-NextClass $today #| Where-Object { $_.StartTime -gt (Get-Date -Format "HH:mm") } # gets next scheduled class for today
 
     if (-not $nextClass) { # if no more classes today, find the next scheduled class on a future day
         $daysOfWeek = @("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")  # days of week to loop through
@@ -45,9 +43,8 @@ Invoke-Command -ScriptBlock {
         $nextLabType = $nextClass.Lab # stores the type of lab # eg. Network or Software
         $tsenv.Value("nextLabType") = $nextLabType # stores next lab type in TS variable
         Write-Output "Next scheduled class: $nextLabType"
-        # wmic /namespace:\\root\ccm\clientsdk path CCM_TaskSequence SetVariable Name="NextLabType" Value=$nextLabType
     } else {
         Write-Output "No upcoming class found."
-        # wmic /namespace:\\root\ccm\clientsdk path CCM_TaskSequence SetVariable Name="NextLabType" Value="None"
+        $tsenv.Value("nextLabType") = "None" # revert TS to default install
     }
 }
