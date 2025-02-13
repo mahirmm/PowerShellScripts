@@ -7,12 +7,14 @@ Invoke-Command -ScriptBlock {
 
     New-PSDrive -Name Z -PSProvider FileSystem -Root $logPath -Credential $adminCredential -Persist # map network share to drive Z:\
 
-    # get today's day name
-    $today = Get-Date -Format "dddd" # eg. 'Monday', 'Tuesday'
+    $today = Get-Date -Format "dddd" # get today's day name # eg. 'Monday', 'Tuesday'
+    $currentTime = Get-Date -Format "HH:mm" # get current time 
     $csvData = Import-Csv -Path $timetablePath # read CSV
 
     # function to process schedule for a given day
-    function Get-NextClass($day) { # $day parameter can be anyday in full name format
+    ## $day parameter can be anyday in full name format
+    ## $ignoreTimeCheck parameter is used when checking future days' schedules
+    function Get-NextClass($day, $ignoreTimeCheck = $false) {
         $sessions = $csvData | Where-Object { $_.Day -eq $day } | ForEach-Object { # gets each given day's lab start and end time 
             $timeRange = $_.Time -split "-"  # split "09:00-11:00" into ["09:00", "11:00"]
             [PSCustomObject]@{ # creates PS object to hold lab data
@@ -22,29 +24,32 @@ Invoke-Command -ScriptBlock {
             }
         } | Sort-Object StartTime # sort by lab's start time
 
-        return $sessions | Where-Object { $_.Lab -ne "Break" -and $_.StartTime -gt (Get-Date -Format "HH:mm") } | Select-Object -First 1 # returns the next upcoming class exlcuding breaks
+        if (-not $ignoreTimeCheck) { # if checking today, ignore past classes
+            $sessions = $sessions | Where-Object { $_.StartTime -gt [DateTime]::ParseExact($currentTime, "HH:mm", $null) }
+        }
+        return $sessions | Where-Object { $_.Lab -ne "Break" } | Select-Object -First 1 # return next available lab that is not a break session
     }
 
-    $nextClass = Get-NextClass $today #| Where-Object { $_.StartTime -gt (Get-Date -Format "HH:mm") } # gets next scheduled class for today
+    $nextClass = Get-NextClass $today # find today's next class
 
     if (-not $nextClass) { # if no more classes today, find the next scheduled class on a future day
-        $daysOfWeek = @("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")  # days of week to loop through
+        $daysOfWeek = @("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") # days of week to loop through
         $startIndex = $daysOfWeek.IndexOf($today) # starts the loop/array counter from today
 
         for ($i = 1; $i -lt $daysOfWeek.Length; $i++) { # $i = 1 to start from tomorrow's day
-            $nextDay = $daysOfWeek[($startIndex + $i) % $daysOfWeek.Length] # gets the next day and wraps back around to start of array if reached the end
-            $nextClass = Get-NextClass $nextDay # get lab data for "next day"
+            $nextDay = $daysOfWeek[($startIndex + $i) % $daysOfWeek.Length]# gets the next day and wraps back around to start of array if reached the end
+            $nextClass = Get-NextClass $nextDay -ignoreTimeCheck $true # get lab data for "next day" ignoring time filtering
             if ($nextClass) { break } # if lab data is found then continue on to next code block otherwise keep looping through for loop until a class is found
         }
     }
 
-    $tsenv = New-Object -ComObject Microsoft.SMS.TSEnvironment # create TS variable
-    if ($nextClass) { # if class found
-        $nextLabType = $nextClass.Lab # stores the type of lab # eg. Network or Software
-        $tsenv.Value("nextLabType") = $nextLabType # stores next lab type in TS variable
+    $tsenv = New-Object -ComObject Microsoft.SMS.TSEnvironment # initialise TS variable
+    if ($nextClass) { # when lab found
+        $nextLabType = $nextClass.Lab # store lab details in variable
+        $tsenv.Value("nextLabType") = $nextLabType # store lab details in TS variable
         Write-Output "Next scheduled class: $nextLabType"
-    } else {
+    } else { # no lab found
         Write-Output "No upcoming class found."
-        $tsenv.Value("nextLabType") = "None" # revert TS to default install
+        $tsenv.Value("nextLabType") = "None" # revert to default TS settings
     }
 }
