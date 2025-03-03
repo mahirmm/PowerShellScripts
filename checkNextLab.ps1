@@ -2,7 +2,7 @@ Invoke-Command -ScriptBlock {
     $logPath = "\\ODIN\Users\Administrator\Desktop\SCCM\Logs" # UNC path to log folder
     $timetablePath = "\\ODIN\Users\Administrator\Desktop\SCCM\SCCM Boot Images\PowerShellScripts\Computer Lab Timetable with Classes.csv" # UNC path to timetable.csv
     $adminUsername = "PROJECT\MAdmin"
-    $adminPassword = ConvertTo-SecureString "Shaolin1" -AsPlainText -Force
+    $adminPassword = ConvertTo-SecureString "]***password***]" -AsPlainText -Force
     $adminCredential = New-Object System.Management.Automation.PSCredential ($adminUsername, $adminPassword) # establishes admin credentials for connection
 
     New-PSDrive -Name Z -PSProvider FileSystem -Root $logPath -Credential $adminCredential -Persist # map network share to drive Z:\
